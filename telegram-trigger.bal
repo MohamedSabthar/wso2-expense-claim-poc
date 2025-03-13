@@ -28,7 +28,7 @@ service /webhook on new http:Listener(8080) {
             return;
         }
         log:printInfo(string `Constructed query ${query}`);
-        string answer = check agent->run(query, message.'from.id.toString());
+        string answer = check expenseClaimAgent->run(query, message.'from.id.toString());
         json reply = {chat_id: message.chat.id.toString(), text: answer};
         http:Response _ = check telegramClient->/sendMessage.post(reply);
     }

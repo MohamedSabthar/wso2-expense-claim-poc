@@ -8,8 +8,8 @@ configurable string serviceUrl = ?;
 configurable string apiVersion = ?;
 configurable string deploymentId = ?;
 
-final agent:Model model = check new agent:AzureOpenAiModel(serviceUrl, apiKey, deploymentId, apiVersion);
-final agent:Agent agent = check new (
+final agent:Model azureOpenAiModel = check new agent:AzureOpenAiModel(serviceUrl, apiKey, deploymentId, apiVersion);
+final agent:Agent expenseClaimAgent = check new (
     systemPrompt = {
         role: "Expense Claim Assistant",
         instructions: "You are an expense claim assistant for WSO2 employees. " +
@@ -19,24 +19,23 @@ final agent:Agent agent = check new (
         "Encourage employees to upload the receipt first, so you can extract details from it rather than " +
         "requesting all information manually."
     },
-    model = model,
+    model = azureOpenAiModel,
     tools = [createExpenseClaim, extractDetailsFromImage]
 );
 
-final http:Client expenseClient = check new ("localhost:9090");
-
 @agent:Tool
 isolated function createExpenseClaim(ExpenseClaimRequest claim) returns ExpenseClaimResponse|error {
+    http:Client expenseClient = check new ("localhost:9090");
     return expenseClient->/claims.post(claim);
 }
 
-final chat:Client azureChatClient = check new (config = {auth: {apiKey: apiKey}}, serviceUrl = serviceUrl);
 
 # Given an image URL, process the image to extract necessary values for an expense claim.  
 # + imageUrl - URL of the image to be processed.  
 # + return - JSON response on success; otherwise, an error.  
 @agent:Tool
 isolated function extractDetailsFromImage(string imageUrl) returns json|error {
+    chat:Client azureChatClient = check new (config = {auth: {apiKey: apiKey}}, serviceUrl = serviceUrl);
     string visionSystemPrompt = string `
 You are a vision assistant. Given a receipt image URL,
 your task is to process the image and extract the following information:
