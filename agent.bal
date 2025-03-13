@@ -20,7 +20,7 @@ final agent:Agent agent = check new (
         "requesting all information manually."
     },
     model = model,
-    tools = [createExpenseClaim, extractDetailsFromImage],
+    tools = [createExpenseClaim, extractDetailsFromImage]
 );
 
 final http:Client expenseClient = check new ("localhost:9090");
